@@ -1,5 +1,5 @@
 {
   "rewrites": [
-    { "source": "/", "destination": "/팡팡주얼리.html" }
+    { "source": "/", "destination": "/팡팡주얼리-v2.html" }
   ]
 }

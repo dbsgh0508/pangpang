@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>팡팡주얼리</title>
+<style>
+  :root {
+    --bg: #f6f3ee;
+    --card: #ffffff;
+    --text: #2b2622;
+    --sub: #7a716a;
+    --line: #e6e0d8;
+    --accent: #b08a4e;
+    --accent-soft: #f3ead9;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+  }
+  header {
+    background: var(--card);
+    border-bottom: 1px solid var(--line);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 0 16px; }
+  .top {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 0 10px;
+  }
+  .shop-name { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
+  .shop-name span { color: var(--accent); }
+  .call {
+    font-size: 14px; color: var(--text); background: #fff;
+    border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px;
+    white-space: nowrap; cursor: pointer;
+  }
+  .search {
+    width: 100%; padding: 11px 14px; border: 1px solid var(--line);
+    border-radius: 10px; font-size: 15px; background: #fbfaf8; outline: none;
+    margin-bottom: 10px;
+  }
+  .search:focus { border-color: var(--accent); background: #fff; }
+  .cats { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 12px; scrollbar-width: none; }
+  .cats::-webkit-scrollbar { display: none; }
+  .chip {
+    flex: 0 0 auto; border: 1px solid var(--line); background: #fff; color: var(--sub);
+    border-radius: 999px; padding: 6px 14px; font-size: 14px; cursor: pointer;
+  }
+  .chip.on { background: var(--text); color: #fff; border-color: var(--text); }
+
+  .intro {
+    margin: 16px 0 0; background: var(--card); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 16px; font-size: 14px; color: var(--text);
+  }
+  .intro b { font-size: 16px; }
+  .intro p { margin-top: 6px; color: var(--sub); }
+
+  .notice {
+    margin: 12px 0 6px; background: var(--accent-soft); color: #6d5630;
+    border-radius: var(--radius); padding: 10px 14px; font-size: 13px;
+  }
+
+  .board { margin: 10px 0 40px; display: flex; flex-direction: column; gap: 10px; }
+  .post {
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 14px; display: flex; gap: 14px; align-items: flex-start; position: relative;
+  }
+  .thumb {
+    flex: 0 0 96px; height: 96px; border-radius: 8px; overflow: hidden;
+    background: linear-gradient(135deg, #efe6d6, #e0d2b8);
+    display: flex; align-items: center; justify-content: center;
+    color: #9c8660; font-size: 12px; position: relative;
+  }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; cursor: zoom-in; }
+  .info { flex: 1; min-width: 0; }
+  .tag {
+    display: inline-block; font-size: 11px; color: var(--accent);
+    background: var(--accent-soft); border-radius: 4px; padding: 1px 6px; margin-bottom: 4px;
+    font-variant-numeric: tabular-nums;
+  }
+  .title { font-size: 16px; font-weight: 600; margin-bottom: 4px; word-break: keep-all; }
+  .desc { font-size: 13px; color: var(--sub); margin-bottom: 8px; word-break: keep-all; }
+  .meta { font-size: 13px; color: var(--sub); display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .price { color: var(--text); font-weight: 600; }
+  .ask {
+    border: none; background: var(--text); color: #fff; border-radius: 8px;
+    padding: 7px 12px; font-size: 13px; cursor: pointer;
+  }
+  .ask:disabled { background: #aaa; cursor: not-allowed; }
+  .empty { text-align: center; color: var(--sub); padding: 40px 0; }
+
+  .sold { opacity: 0.55; }
+  .sold .ask { background: #aaa; cursor: not-allowed; }
+  .draft { opacity: 0.45; }
+  .draft .title { color: var(--sub); font-weight: 500; }
+
+  .overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+    display: none; align-items: center; justify-content: center; padding: 20px; z-index: 50;
+  }
+  .overlay.show { display: flex; }
+  .modal {
+    background: #fff; border-radius: 16px; width: 100%; max-width: 400px;
+    padding: 22px 20px; max-height: 88vh; overflow-y: auto;
+  }
+  .modal h3 { font-size: 17px; margin-bottom: 4px; }
+  .modal .p { font-size: 13px; color: var(--sub); margin-bottom: 14px; }
+  .modal .sec { font-size: 13px; color: var(--sub); margin: 14px 0 6px; }
+  .faq-btn {
+    display: block; width: 100%; text-align: left; background: #fbfaf8;
+    border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px;
+    font-size: 14px; color: var(--text); margin-bottom: 6px; cursor: pointer;
+  }
+  .faq-btn.on { border-color: var(--accent); background: var(--accent-soft); }
+  .answer {
+    background: var(--accent-soft); border-radius: 8px; padding: 12px;
+    font-size: 14px; color: #4d3f26; margin: 8px 0 4px; white-space: pre-line;
+  }
+  .modal .btns { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+  .btn {
+    display: block; text-align: center; text-decoration: none; border-radius: 10px;
+    padding: 12px; font-size: 15px; border: 1px solid var(--line); background: #fff; color: var(--text); cursor: pointer;
+  }
+  .btn.primary { background: var(--text); color: #fff; border-color: var(--text); }
+  footer { font-size: 12px; color: var(--sub); text-align: center; padding: 0 0 30px; }
+
+  .sheet-wrap {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+    display: none; align-items: flex-end; justify-content: center; z-index: 60;
+  }
+  .sheet-wrap.show { display: flex; }
+  .sheet {
+    background: #fff; width: 100%; max-width: 480px; border-radius: 18px 18px 0 0;
+    padding: 20px 18px 28px;
+  }
+  .sheet .num { font-size: 13px; color: var(--sub); text-align: center; margin-bottom: 14px; }
+  .sheet .btn { font-size: 16px; padding: 14px; margin-top: 8px; }
+  .sheet .btn.cancel { color: var(--sub); }
+
+  .lightbox {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+    display: none; align-items: center; justify-content: center; z-index: 70; padding: 16px;
+    cursor: zoom-out;
+  }
+  .lightbox.show { display: flex; }
+  .lightbox img { max-width: 100%; max-height: 92vh; border-radius: 8px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="top">
+      <div class="shop-name">팡팡<span>주얼리</span></div>
+      <button class="call" id="callBtn">📞 010-4744-5615</button>
+    </div>
+    <input id="q" class="search" type="search" placeholder="상품명, 소재, 키워드로 검색">
+    <div class="cats" id="cats"></div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="intro">
+    <b>안녕하세요, 팡팡언니입니다 😊</b>
+    <p>라이브에서 고르기 어려우셨죠? 천천히 둘러보시고, 궁금한 제품은 <b>문의하기</b>를 눌러 설명을 확인해 주세요.</p>
+  </div>
+  <div class="notice">
+    💎 금 시세에 따라 가격이 매일 달라집니다. 가격은 문자로 안내드려요.
+  </div>
+  <div class="board" id="board"></div>
+</main>
+
+<footer>© 팡팡주얼리 · 문의 010-4744-5615</footer>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h3 id="mTitle"></h3>
+    <p class="p" id="mDesc"></p>
+    <div class="sec">궁금한 점을 눌러 보세요</div>
+    <div id="mFaq"></div>
+    <div class="answer" id="mAnswer" style="display:none"></div>
+    <div class="sec">구매 전에 한 번만 확인해 주세요</div>
+    <div class="p" style="margin:0">✔ 이미 비슷한 제품을 가지고 계신가요?<br>✔ 어떤 자리(일상, 선물, 행사)에 착용하실 건가요?<br>✔ 예산 범위를 미리 생각해 두셨나요?</div>
+    <div class="btns">
+      <a class="btn primary" id="mSms" href="#">이 제품 문자로 가격 문의하기</a>
+      <button class="btn" id="mClose">닫기</button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet-wrap" id="sheetWrap">
+  <div class="sheet">
+    <div class="num">010-4744-5615</div>
+    <a class="btn primary" id="sheetCall" href="tel:01047445615">📞 전화하기</a>
+    <a class="btn" id="sheetSms" href="sms:01047445615">💬 문자 보내기</a>
+    <button class="btn cancel" id="sheetClose">닫기</button>
+  </div>
+</div>
+
+<div class="lightbox" id="lightbox">
+  <img id="lightboxImg" alt="">
+</div>
+
+<script>
+  // ===== 설정 =====
+  const SHOP_PHONE = "01047445615";
+  const CATEGORIES = ["전체", "목걸이", "반지", "팔찌", "귀걸이"];
+
+  // 모든 상품에 공통으로 붙는 질문 (상품별 faq 아래에 표시)
+  const COMMON_FAQ = [
+    { q: "배송은 얼마나 걸리나요?", a: "[예시] 주문 확인 후 1~2일 안에 발송해 드려요. 실제 배송 안내 문구로 바꿔주세요." },
+    { q: "교환·환불은 어떻게 하나요?", a: "[예시] 수령 후 7일 이내, 착용 흔적이 없는 경우 가능해요. 실제 정책으로 바꿔주세요." },
+    { q: "사이즈 조절이 가능한가요?", a: "[예시] 반지·팔찌는 조절 가능 여부가 상품마다 달라요. 상품별 설명을 확인해 주세요." }
+  ];
+
+  // ===== 번호 배치 (위에서부터 001 → 150 순서) =====
+  //  001      팔찌
+  //  002~050  목걸이
+  //  051~090  반지
+  //  091~120  팔찌
+  //  121~150  귀걸이
+  const SLOT_PLAN = [
+    ["팔찌", 1, 1],
+    ["목걸이", 2, 50],
+    ["반지", 51, 90],
+    ["팔찌", 91, 120],
+    ["귀걸이", 121, 150]
+  ];
+
+  // ===== 예시 상품 (번호별로 채워 넣기) =====
+  //  - name 을 채우면 상품이 채워집니다. 비워두면 "준비중"으로 보여요.
+  //  - image    : 사진 주소 (예: "images/001.jpg"). 사진을 누르면 크게 봅니다.
+  //  - soldOut  : true면 품절 처리
+  //  - faq      : 이 상품 전용 질문·답변
+  const EXAMPLES = {
+    "001": {
+      name: "14k 15.99g 원석",
+      material: "14K 골드 · 원석",
+      desc: "무게 15.99g · 원석 팔찌",
+      tags: ["팔찌", "원석", "14k"],
+      image: "images/bracelet-004.gif",
+      faq: [
+        { q: "무게는 얼마인가요?", a: "15.99g이에요." },
+        { q: "원석은 어떤 건가요?", a: "[예시] 원석의 종류와 특징을 여기에 적어주세요." }
+      ]
+    },
+    "002": {
+      name: "14K 골드 체인 목걸이",
+      material: "14K 골드",
+      desc: "얇은 체인 · 데일리 착용용 · 길이 40cm",
+      tags: ["체인", "데일리", "골드"],
+      faq: [
+        { q: "이 목걸이 소재는 뭔가요?", a: "[예시] 14K 골드예요. 피부에 닿아도 부담이 적은 소재예요." },
+        { q: "길이를 바꿀 수 있나요?", a: "[예시] 40cm 기준이고, 원하시는 길이가 있으면 문자로 알려주세요." }
+      ]
+    },
+    "051": {
+      name: "실버 925 하트 반지",
+      material: "925 실버",
+      desc: "하트 포인트 · 사이즈 조절 가능",
+      tags: ["하트", "실버", "커플"],
+      faq: [
+        { q: "사이즈는 어떻게 고르나요?", a: "[예시] 평소 끼는 반지 사이즈를 알려주시면 맞춰서 안내해 드려요." },
+        { q: "커플로 맞출 수 있나요?", a: "[예시] 네, 같은 디자인으로 두 개 주문하실 수 있어요." }
+      ]
+    },
+    "052": {
+      name: "다이아 큐빅 솔리테어 반지",
+      material: "925 실버 · 큐빅",
+      desc: "심플한 1구 디자인 · 여러 사이즈 보유",
+      tags: ["큐빅", "솔리테어", "웨딩"],
+      faq: [
+        { q: "큐빅이 쉽게 빠지나요?", a: "[예시] 일반 착용에는 문제없도록 세팅해 두었어요. 관리 방법은 문자로 안내드릴게요." },
+        { q: "웨딩 용도로 써도 되나요?", a: "[예시] 네, 심플한 디자인이라 예식 때도 잘 어울려요." }
+      ]
+    },
+    "121": {
+      name: "진주 드롭 귀걸이",
+      material: "담수진주 · 14K 포스트",
+      desc: "행사, 면접, 예식용 · 가볍고 편한 착용감",
+      tags: ["진주", "행사", "드롭"],
+      faq: [
+        { q: "알레르기가 있는데 괜찮을까요?", a: "[예시] 14K 포스트라 금속 알레르기가 있어도 비교적 괜찮은 편이에요. 걱정되시면 문자로 여쭤봐 주세요." },
+        { q: "진주는 진짜인가요?", a: "[예시] 담수진주예요. 상품 사진과 설명을 확인해 주세요." }
+      ]
+    }
+  };
+
+  // 150개 칸을 001~150 순서로 미리 만들어 둠
+  const PRODUCTS = [];
+  for (const [category, start, end] of SLOT_PLAN) {
+    for (let n = start; n <= end; n++) {
+      const id = String(n).padStart(3, "0");
+      PRODUCTS.push({
+        id,
+        category,
+        name: "",
+        material: "",
+        desc: "",
+        tags: [],
+        image: "",
+        soldOut: false,
+        faq: [],
+        ...(EXAMPLES[id] || {})
+      });
+    }
+  }
+  // 칸 순서가 001~150이 되도록 정렬
+  PRODUCTS.sort((a, b) => a.id.localeCompare(b.id));
+
+  // ===== 화면 로직 =====
+  let currentCat = "전체";
+  let currentQuery = "";
+
+  const $ = (id) => document.getElementById(id);
+
+  function renderCats() {
+    $("cats").innerHTML = CATEGORIES.map(c =>
+      `<button class="chip ${c === currentCat ? "on" : ""}" data-cat="${c}">${c}</button>`
+    ).join("");
+  }
+
+  function isFilled(p) {
+    return p.name && p.name.trim() !== "";
+  }
+
+  function matches(p) {
+    const catOk = currentCat === "전체" || p.category === currentCat;
+    const q = currentQuery.trim().toLowerCase();
+    if (!isFilled(p)) return catOk && !q;   // 준비중 칸은 검색어 없을 때만 보임
+    const text = [p.name, p.material, p.desc, p.category, ...(p.tags || [])].join(" ").toLowerCase();
+    const qOk = !q || text.includes(q);
+    return catOk && qOk;
+  }
+
+  function renderBoard() {
+    const list = PRODUCTS.filter(matches);
+    if (list.length === 0) {
+      $("board").innerHTML = `<div class="empty">찾으시는 상품이 없어요. 문의 주시면 찾아드릴게요.</div>`;
+      return;
+    }
+    $("board").innerHTML = list.map(p => {
+      if (!isFilled(p)) {
+        return `
+          <article class="post draft">
+            <div class="thumb">사진 준비중</div>
+            <div class="info">
+              <span class="tag">[${p.id}]</span>
+              <div class="title">준비중</div>
+              <div class="desc">${p.category}</div>
+              <div class="meta">
+                <span class="price">-</span>
+                <button class="ask" disabled>준비중</button>
+              </div>
+            </div>
+          </article>`;
+      }
+      return `
+      <article class="post ${p.soldOut ? "sold" : ""}">
+        <div class="thumb">
+          ${p.image ? `<img src="${p.image}" alt="${p.name}" data-full="${p.image}">` : "사진 준비중"}
+        </div>
+        <div class="info">
+          <span class="tag">[${p.id}]</span>
+          <div class="title">${p.name}</div>
+          <div class="desc">${p.desc}</div>
+          <div class="meta">
+            <span class="price">${p.soldOut ? "품절" : "가격: 문자 문의"}</span>
+            <button class="ask" data-id="${p.id}" ${p.soldOut ? "disabled" : ""}>
+              ${p.soldOut ? "품절" : "문의하기"}
+            </button>
+          </div>
+        </div>
+      </article>`;
+    }).join("");
+  }
+
+  function openAsk(id) {
+    const p = PRODUCTS.find(x => x.id === id);
+    if (!p || !isFilled(p)) return;
+    $("mTitle").textContent = `[${p.id}] ${p.name}`;
+    $("mDesc").textContent = p.desc;
+
+    const faqs = [...(p.faq || []), ...COMMON_FAQ];
+    $("mFaq").innerHTML = faqs.map((f, i) =>
+      `<button class="faq-btn" data-i="${i}">${f.q}</button>`
+    ).join("");
+    $("mFaq").dataset.list = JSON.stringify(faqs);
+    $("mAnswer").style.display = "none";
+
+    const msg = `안녕하세요. 팡팡주얼리 상품 문의드립니다.\n[${p.id}] ${p.name}\n가격 안내 부탁드려요.`;
+    $("mSms").href = `sms:${SHOP_PHONE}?body=${encodeURIComponent(msg)}`;
+    $("overlay").classList.add("show");
+  }
+
+  function closeAsk() { $("overlay").classList.remove("show"); }
+
+  $("mFaq").addEventListener("click", (e) => {
+    const b = e.target.closest(".faq-btn");
+    if (!b) return;
+    const list = JSON.parse($("mFaq").dataset.list);
+    const item = list[Number(b.dataset.i)];
+    document.querySelectorAll(".faq-btn").forEach(x => x.classList.remove("on"));
+    b.classList.add("on");
+    $("mAnswer").textContent = item.a;
+    $("mAnswer").style.display = "block";
+  });
+
+  $("cats").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-cat]");
+    if (!b) return;
+    currentCat = b.dataset.cat;
+    renderCats();
+    renderBoard();
+  });
+
+  $("q").addEventListener("input", (e) => {
+    currentQuery = e.target.value;
+    renderBoard();
+  });
+
+  $("board").addEventListener("click", (e) => {
+    const img = e.target.closest(".thumb img");
+    if (img) {
+      $("lightboxImg").src = img.dataset.full;
+      $("lightbox").classList.add("show");
+      return;
+    }
+    const b = e.target.closest(".ask");
+    if (!b || b.disabled) return;
+    openAsk(b.dataset.id);
+  });
+
+  $("lightbox").addEventListener("click", () => {
+    $("lightbox").classList.remove("show");
+    $("lightboxImg").src = "";
+  });
+
+  $("callBtn").addEventListener("click", () => {
+    $("sheetWrap").classList.add("show");
+  });
+  $("sheetClose").addEventListener("click", () => {
+    $("sheetWrap").classList.remove("show");
+  });
+  $("sheetWrap").addEventListener("click", (e) => {
+    if (e.target.id === "sheetWrap") $("sheetWrap").classList.remove("show");
+  });
+
+  $("mClose").addEventListener("click", closeAsk);
+  $("overlay").addEventListener("click", (e) => {
+    if (e.target.id === "overlay") closeAsk();
+  });
+
+  renderCats();
+  renderBoard();
+</script>
+</body>
+</html>
