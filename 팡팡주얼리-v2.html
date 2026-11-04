@@ -70,7 +70,7 @@
   .board { margin: 10px 0 40px; display: flex; flex-direction: column; gap: 10px; }
   .post {
     background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
-    padding: 14px; display: flex; gap: 14px; align-items: flex-start; position: relative;
+    padding: 14px; display: flex; gap: 14px; align-items: flex-start;
   }
   .thumb {
     flex: 0 0 96px; height: 96px; border-radius: 8px; overflow: hidden;
@@ -79,12 +79,13 @@
     color: #9c8660; font-size: 12px; position: relative;
   }
   .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; cursor: zoom-in; }
-  .info { flex: 1; min-width: 0; }
-  .tag {
-    display: inline-block; font-size: 11px; color: var(--accent);
-    background: var(--accent-soft); border-radius: 4px; padding: 1px 6px; margin-bottom: 4px;
-    font-variant-numeric: tabular-nums;
+  .num-badge {
+    position: absolute; left: 50%; bottom: 6px; transform: translateX(-50%);
+    background: rgba(0,0,0,0.6); color: #fff; font-size: 17px; font-weight: 700;
+    padding: 2px 10px; border-radius: 999px; letter-spacing: 1px;
+    font-variant-numeric: tabular-nums; white-space: nowrap; pointer-events: none;
   }
+  .info { flex: 1; min-width: 0; }
   .title { font-size: 16px; font-weight: 600; margin-bottom: 4px; word-break: keep-all; }
   .desc { font-size: 13px; color: var(--sub); margin-bottom: 8px; word-break: keep-all; }
   .meta { font-size: 13px; color: var(--sub); display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -111,17 +112,20 @@
     padding: 22px 20px; max-height: 88vh; overflow-y: auto;
   }
   .modal h3 { font-size: 17px; margin-bottom: 4px; }
-  .modal .p { font-size: 13px; color: var(--sub); margin-bottom: 14px; }
+  .modal .p { font-size: 13px; color: var(--sub); margin-bottom: 12px; }
   .modal .sec { font-size: 13px; color: var(--sub); margin: 14px 0 6px; }
-  .faq-btn {
-    display: block; width: 100%; text-align: left; background: #fbfaf8;
-    border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px;
-    font-size: 14px; color: var(--text); margin-bottom: 6px; cursor: pointer;
+  .modal .search { margin-bottom: 0; font-size: 14px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chips .chip { font-size: 13px; padding: 5px 10px; }
+  .qa {
+    border: 1px solid var(--line); border-radius: 10px; padding: 12px; margin-top: 8px;
+    background: #fbfaf8;
   }
-  .faq-btn.on { border-color: var(--accent); background: var(--accent-soft); }
-  .answer {
-    background: var(--accent-soft); border-radius: 8px; padding: 12px;
-    font-size: 14px; color: #4d3f26; margin: 8px 0 4px; white-space: pre-line;
+  .qa .qq { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+  .qa .aa { font-size: 14px; color: #4d3f26; white-space: pre-line; }
+  .none {
+    font-size: 14px; color: var(--sub); background: #fbfaf8; border-radius: 10px;
+    padding: 12px; margin-top: 8px;
   }
   .modal .btns { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
   .btn {
@@ -169,7 +173,7 @@
 <main class="wrap">
   <div class="intro">
     <b>안녕하세요, 팡팡언니입니다 😊</b>
-    <p>라이브에서 고르기 어려우셨죠? 천천히 둘러보시고, 궁금한 제품은 <b>문의하기</b>를 눌러 설명을 확인해 주세요.</p>
+    <p>라이브에서 고르기 어려우셨죠? 천천히 둘러보시고, 궁금한 점은 <b>문의하기</b>에 적어 주세요.</p>
   </div>
   <div class="notice">
     💎 금 시세에 따라 가격이 매일 달라집니다. 가격은 문자로 안내드려요.
@@ -183,11 +187,9 @@
   <div class="modal">
     <h3 id="mTitle"></h3>
     <p class="p" id="mDesc"></p>
-    <div class="sec">궁금한 점을 눌러 보세요</div>
-    <div id="mFaq"></div>
-    <div class="answer" id="mAnswer" style="display:none"></div>
-    <div class="sec">구매 전에 한 번만 확인해 주세요</div>
-    <div class="p" style="margin:0">✔ 이미 비슷한 제품을 가지고 계신가요?<br>✔ 어떤 자리(일상, 선물, 행사)에 착용하실 건가요?<br>✔ 예산 범위를 미리 생각해 두셨나요?</div>
+    <input id="mInput" class="search" type="search" placeholder="궁금한 점을 적어 보세요 (예: 배송 얼마나 걸려요?)">
+    <div class="sec" id="mSecLabel">자주 묻는 질문</div>
+    <div id="mResults"></div>
     <div class="btns">
       <a class="btn primary" id="mSms" href="#">이 제품 문자로 가격 문의하기</a>
       <button class="btn" id="mClose">닫기</button>
@@ -208,24 +210,13 @@
   <img id="lightboxImg" alt="">
 </div>
 
+<script src="qa.js"></script>
 <script>
   // ===== 설정 =====
   const SHOP_PHONE = "01047445615";
   const CATEGORIES = ["전체", "목걸이", "반지", "팔찌", "귀걸이"];
 
-  // 모든 상품에 공통으로 붙는 질문 (상품별 faq 아래에 표시)
-  const COMMON_FAQ = [
-    { q: "배송은 얼마나 걸리나요?", a: "[예시] 주문 확인 후 1~2일 안에 발송해 드려요. 실제 배송 안내 문구로 바꿔주세요." },
-    { q: "교환·환불은 어떻게 하나요?", a: "[예시] 수령 후 7일 이내, 착용 흔적이 없는 경우 가능해요. 실제 정책으로 바꿔주세요." },
-    { q: "사이즈 조절이 가능한가요?", a: "[예시] 반지·팔찌는 조절 가능 여부가 상품마다 달라요. 상품별 설명을 확인해 주세요." }
-  ];
-
   // ===== 번호 배치 (위에서부터 001 → 150 순서) =====
-  //  001      팔찌
-  //  002~050  목걸이
-  //  051~090  반지
-  //  091~120  팔찌
-  //  121~150  귀걸이
   const SLOT_PLAN = [
     ["팔찌", 1, 1],
     ["목걸이", 2, 50],
@@ -236,60 +227,43 @@
 
   // ===== 예시 상품 (번호별로 채워 넣기) =====
   //  - name 을 채우면 상품이 채워집니다. 비워두면 "준비중"으로 보여요.
-  //  - image    : 사진 주소 (예: "images/001.jpg"). 사진을 누르면 크게 봅니다.
+  //  - image    : 사진 주소 (GIF·JPG 등). 사진을 누르면 크게 봅니다.
+  //  - category : 칸의 기본 카테고리를 다르게 하고 싶을 때 지정
   //  - soldOut  : true면 품절 처리
-  //  - faq      : 이 상품 전용 질문·답변
+  //  - 상품 전용 질문·답변은 qa.js 에서 productId 로 추가
   const EXAMPLES = {
     "001": {
       name: "14k 15.99g 원석",
       material: "14K 골드 · 원석",
       desc: "무게 15.99g · 원석 팔찌",
       tags: ["팔찌", "원석", "14k"],
-      image: "images/bracelet-004.gif",
-      faq: [
-        { q: "무게는 얼마인가요?", a: "15.99g이에요." },
-        { q: "원석은 어떤 건가요?", a: "[예시] 원석의 종류와 특징을 여기에 적어주세요." }
-      ]
+      image: "images/bracelet-004.gif"
     },
     "002": {
-      name: "14K 골드 체인 목걸이",
-      material: "14K 골드",
-      desc: "얇은 체인 · 데일리 착용용 · 길이 40cm",
-      tags: ["체인", "데일리", "골드"],
-      faq: [
-        { q: "이 목걸이 소재는 뭔가요?", a: "[예시] 14K 골드예요. 피부에 닿아도 부담이 적은 소재예요." },
-        { q: "길이를 바꿀 수 있나요?", a: "[예시] 40cm 기준이고, 원하시는 길이가 있으면 문자로 알려주세요." }
-      ]
+      category: "팔찌",
+      name: "14k 9.37g 랩에멜/랩다이아 17.5cm",
+      material: "14K 골드 · 랩에멜 · 랩다이아",
+      desc: "무게 9.37g · 길이 17.5cm",
+      tags: ["팔찌", "랩에멜", "랩다이아", "14k"],
+      image: "images/002.gif"
     },
     "051": {
       name: "실버 925 하트 반지",
       material: "925 실버",
       desc: "하트 포인트 · 사이즈 조절 가능",
-      tags: ["하트", "실버", "커플"],
-      faq: [
-        { q: "사이즈는 어떻게 고르나요?", a: "[예시] 평소 끼는 반지 사이즈를 알려주시면 맞춰서 안내해 드려요." },
-        { q: "커플로 맞출 수 있나요?", a: "[예시] 네, 같은 디자인으로 두 개 주문하실 수 있어요." }
-      ]
+      tags: ["하트", "실버", "커플"]
     },
     "052": {
       name: "다이아 큐빅 솔리테어 반지",
       material: "925 실버 · 큐빅",
       desc: "심플한 1구 디자인 · 여러 사이즈 보유",
-      tags: ["큐빅", "솔리테어", "웨딩"],
-      faq: [
-        { q: "큐빅이 쉽게 빠지나요?", a: "[예시] 일반 착용에는 문제없도록 세팅해 두었어요. 관리 방법은 문자로 안내드릴게요." },
-        { q: "웨딩 용도로 써도 되나요?", a: "[예시] 네, 심플한 디자인이라 예식 때도 잘 어울려요." }
-      ]
+      tags: ["큐빅", "솔리테어", "웨딩"]
     },
     "121": {
       name: "진주 드롭 귀걸이",
       material: "담수진주 · 14K 포스트",
       desc: "행사, 면접, 예식용 · 가볍고 편한 착용감",
-      tags: ["진주", "행사", "드롭"],
-      faq: [
-        { q: "알레르기가 있는데 괜찮을까요?", a: "[예시] 14K 포스트라 금속 알레르기가 있어도 비교적 괜찮은 편이에요. 걱정되시면 문자로 여쭤봐 주세요." },
-        { q: "진주는 진짜인가요?", a: "[예시] 담수진주예요. 상품 사진과 설명을 확인해 주세요." }
-      ]
+      tags: ["진주", "행사", "드롭"]
     }
   };
 
@@ -307,17 +281,62 @@
         tags: [],
         image: "",
         soldOut: false,
-        faq: [],
         ...(EXAMPLES[id] || {})
       });
     }
   }
-  // 칸 순서가 001~150이 되도록 정렬
   PRODUCTS.sort((a, b) => a.id.localeCompare(b.id));
+
+  // ===== 질문 매칭 (qa.js 의 QA 사용) =====
+  // 정규화: 공백·기호 제거, 소문자
+  function norm(s) {
+    return (s || "").toLowerCase().replace(/[\s.,!?~·\-_()\[\]"'“”]/g, "");
+  }
+  // 두 글자씩 잘라 비슷한 정도(0~1)를 계산
+  function bigrams(s) {
+    const t = norm(s);
+    const m = new Map();
+    for (let i = 0; i < t.length - 1; i++) {
+      const g = t.slice(i, i + 2);
+      m.set(g, (m.get(g) || 0) + 1);
+    }
+    return m;
+  }
+  function similarity(a, b) {
+    const A = bigrams(a), B = bigrams(b);
+    let totA = 0, totB = 0, inter = 0;
+    for (const v of A.values()) totA += v;
+    for (const v of B.values()) totB += v;
+    for (const [g, c] of A) if (B.has(g)) inter += Math.min(c, B.get(g));
+    return totA + totB ? (2 * inter) / (totA + totB) : 0;
+  }
+  // 질문 하나가 고객 질문과 얼마나 맞는지 점수
+  function scoreQA(query, item) {
+    const qn = norm(query);
+    let s = 0;
+    for (const k of item.keywords || []) {
+      if (k && qn.includes(norm(k))) s += 2;
+    }
+    let best = similarity(query, item.q);
+    for (const alt of item.alts || []) best = Math.max(best, similarity(query, alt));
+    s += best * 4;
+    return s;
+  }
+  // 상품에 맞는 질문만 골라서 점수 순으로 정렬
+  function findAnswers(query, productId) {
+    const pool = QA.filter(x => !x.productId || x.productId === productId);
+    return pool
+      .map(x => ({ x, s: scoreQA(query, x) }))
+      .filter(r => r.s >= 2)
+      .sort((a, b) => b.s - a.s)
+      .slice(0, 3)
+      .map(r => r.x);
+  }
 
   // ===== 화면 로직 =====
   let currentCat = "전체";
   let currentQuery = "";
+  let currentProduct = null;
 
   const $ = (id) => document.getElementById(id);
 
@@ -350,9 +369,8 @@
       if (!isFilled(p)) {
         return `
           <article class="post draft">
-            <div class="thumb">사진 준비중</div>
+            <div class="thumb">사진 준비중<span class="num-badge">${p.id}</span></div>
             <div class="info">
-              <span class="tag">[${p.id}]</span>
               <div class="title">준비중</div>
               <div class="desc">${p.category}</div>
               <div class="meta">
@@ -366,9 +384,9 @@
       <article class="post ${p.soldOut ? "sold" : ""}">
         <div class="thumb">
           ${p.image ? `<img src="${p.image}" alt="${p.name}" data-full="${p.image}">` : "사진 준비중"}
+          <span class="num-badge">${p.id}</span>
         </div>
         <div class="info">
-          <span class="tag">[${p.id}]</span>
           <div class="title">${p.name}</div>
           <div class="desc">${p.desc}</div>
           <div class="meta">
@@ -382,18 +400,43 @@
     }).join("");
   }
 
+  // 자주 묻는 질문 (공통 질문 중 앞쪽 것)
+  function renderDefaultChips(p) {
+    const common = QA.filter(x => !x.productId).slice(0, 8);
+    const own = QA.filter(x => x.productId === p.id);
+    const items = [...own, ...common];
+    $("mResults").innerHTML = `<div class="chips">${items.map(x =>
+      `<button class="chip" data-qid="${x.id}">${x.q}</button>`
+    ).join("")}</div>`;
+  }
+
+  function showAnswers(query) {
+    if (!query.trim()) {
+      $("mSecLabel").textContent = "자주 묻는 질문";
+      renderDefaultChips(currentProduct);
+      return;
+    }
+    const found = findAnswers(query, currentProduct.id);
+    $("mSecLabel").textContent = found.length ? "이런 답변을 찾았어요" : "";
+    if (found.length === 0) {
+      $("mResults").innerHTML = `<div class="none">정확한 답변을 찾지 못했어요. 아래 문자 버튼으로 편하게 물어봐 주세요.</div>`;
+      return;
+    }
+    $("mResults").innerHTML = found.map(x => `
+      <div class="qa">
+        <div class="qq">${x.q}</div>
+        <div class="aa">${x.a}</div>
+      </div>`).join("");
+  }
+
   function openAsk(id) {
     const p = PRODUCTS.find(x => x.id === id);
     if (!p || !isFilled(p)) return;
+    currentProduct = p;
     $("mTitle").textContent = `[${p.id}] ${p.name}`;
     $("mDesc").textContent = p.desc;
-
-    const faqs = [...(p.faq || []), ...COMMON_FAQ];
-    $("mFaq").innerHTML = faqs.map((f, i) =>
-      `<button class="faq-btn" data-i="${i}">${f.q}</button>`
-    ).join("");
-    $("mFaq").dataset.list = JSON.stringify(faqs);
-    $("mAnswer").style.display = "none";
+    $("mInput").value = "";
+    showAnswers("");
 
     const msg = `안녕하세요. 팡팡주얼리 상품 문의드립니다.\n[${p.id}] ${p.name}\n가격 안내 부탁드려요.`;
     $("mSms").href = `sms:${SHOP_PHONE}?body=${encodeURIComponent(msg)}`;
@@ -402,15 +445,22 @@
 
   function closeAsk() { $("overlay").classList.remove("show"); }
 
-  $("mFaq").addEventListener("click", (e) => {
-    const b = e.target.closest(".faq-btn");
+  $("mInput").addEventListener("input", (e) => {
+    showAnswers(e.target.value);
+  });
+
+  $("mResults").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-qid]");
     if (!b) return;
-    const list = JSON.parse($("mFaq").dataset.list);
-    const item = list[Number(b.dataset.i)];
-    document.querySelectorAll(".faq-btn").forEach(x => x.classList.remove("on"));
-    b.classList.add("on");
-    $("mAnswer").textContent = item.a;
-    $("mAnswer").style.display = "block";
+    const item = QA.find(x => x.id === b.dataset.qid);
+    if (!item) return;
+    $("mInput").value = item.q;
+    $("mSecLabel").textContent = "이런 답변을 찾았어요";
+    $("mResults").innerHTML = `
+      <div class="qa">
+        <div class="qq">${item.q}</div>
+        <div class="aa">${item.a}</div>
+      </div>`;
   });
 
   $("cats").addEventListener("click", (e) => {
