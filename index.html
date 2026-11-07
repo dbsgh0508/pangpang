@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>팡팡주얼리</title>
+<style>
+  :root {
+    --bg: #f6f3ee;
+    --card: #ffffff;
+    --text: #2b2622;
+    --sub: #7a716a;
+    --line: #e6e0d8;
+    --accent: #b08a4e;
+    --accent-soft: #f3ead9;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+  }
+  header {
+    background: var(--card);
+    border-bottom: 1px solid var(--line);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 0 16px; }
+  .top {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 0 10px;
+  }
+  .shop-name { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
+  .shop-name span { color: var(--accent); }
+  .call {
+    font-size: 14px; color: var(--text); background: #fff;
+    border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px;
+    white-space: nowrap; cursor: pointer;
+  }
+  .search {
+    width: 100%; padding: 11px 14px; border: 1px solid var(--line);
+    border-radius: 10px; font-size: 15px; background: #fbfaf8; outline: none;
+    margin-bottom: 10px;
+  }
+  .search:focus { border-color: var(--accent); background: #fff; }
+  .cats { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 12px; scrollbar-width: none; }
+  .cats::-webkit-scrollbar { display: none; }
+  .chip {
+    flex: 0 0 auto; border: 1px solid var(--line); background: #fff; color: var(--sub);
+    border-radius: 999px; padding: 6px 14px; font-size: 14px; cursor: pointer;
+  }
+  .chip.on { background: var(--text); color: #fff; border-color: var(--text); }
+
+  .intro {
+    margin: 16px 0 0; background: var(--card); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 16px; font-size: 14px; color: var(--text);
+  }
+  .intro b { font-size: 16px; }
+  .intro p { margin-top: 6px; color: var(--sub); }
+
+  .notice {
+    margin: 12px 0 6px; background: var(--accent-soft); color: #6d5630;
+    border-radius: var(--radius); padding: 10px 14px; font-size: 13px;
+  }
+
+  .board { margin: 10px 0 40px; display: flex; flex-direction: column; gap: 10px; }
+  .post {
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 14px; display: flex; gap: 14px; align-items: flex-start;
+  }
+  .thumb {
+    flex: 0 0 96px; height: 96px; border-radius: 8px; overflow: hidden;
+    background: linear-gradient(135deg, #efe6d6, #e0d2b8);
+    display: flex; align-items: center; justify-content: center;
+    color: #9c8660; font-size: 12px; position: relative;
+  }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; cursor: zoom-in; }
+  .num-badge {
+    position: absolute; left: 50%; bottom: 6px; transform: translateX(-50%);
+    background: rgba(0,0,0,0.6); color: #fff; font-size: 17px; font-weight: 700;
+    padding: 2px 10px; border-radius: 999px; letter-spacing: 1px;
+    font-variant-numeric: tabular-nums; white-space: nowrap; pointer-events: none;
+  }
+  .info { flex: 1; min-width: 0; }
+  .title { font-size: 16px; font-weight: 600; margin-bottom: 4px; word-break: keep-all; }
+  .desc { font-size: 13px; color: var(--sub); margin-bottom: 8px; word-break: keep-all; }
+  .meta { font-size: 13px; color: var(--sub); display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .price { color: var(--text); font-weight: 600; }
+  .ask {
+    border: none; background: var(--text); color: #fff; border-radius: 8px;
+    padding: 7px 12px; font-size: 13px; cursor: pointer;
+  }
+  .ask:disabled { background: #aaa; cursor: not-allowed; }
+  .empty { text-align: center; color: var(--sub); padding: 40px 0; }
+
+  .sold { opacity: 0.55; }
+  .sold .ask { background: #aaa; cursor: not-allowed; }
+  .draft { opacity: 0.45; }
+  .draft .title { color: var(--sub); font-weight: 500; }
+
+  .overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+    display: none; align-items: center; justify-content: center; padding: 20px; z-index: 50;
+  }
+  .overlay.show { display: flex; }
+  .modal {
+    background: #fff; border-radius: 16px; width: 100%; max-width: 400px;
+    padding: 22px 20px; max-height: 88vh; overflow-y: auto;
+  }
+  .modal h3 { font-size: 17px; margin-bottom: 4px; }
+  .modal .p { font-size: 13px; color: var(--sub); margin-bottom: 12px; }
+  .modal .sec { font-size: 13px; color: var(--sub); margin: 14px 0 6px; }
+  .modal .search { margin-bottom: 0; font-size: 14px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chips .chip { font-size: 13px; padding: 5px 10px; }
+  .qa {
+    border: 1px solid var(--line); border-radius: 10px; padding: 12px; margin-top: 8px;
+    background: #fbfaf8;
+  }
+  .qa .qq { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+  .qa .aa { font-size: 14px; color: #4d3f26; white-space: pre-line; }
+  .none {
+    font-size: 14px; color: var(--sub); background: #fbfaf8; border-radius: 10px;
+    padding: 12px; margin-top: 8px;
+  }
+  .modal .btns { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+  .btn {
+    display: block; text-align: center; text-decoration: none; border-radius: 10px;
+    padding: 12px; font-size: 15px; border: 1px solid var(--line); background: #fff; color: var(--text); cursor: pointer;
+  }
+  .btn.primary { background: var(--text); color: #fff; border-color: var(--text); }
+  footer { font-size: 12px; color: var(--sub); text-align: center; padding: 0 0 30px; }
+
+  .sheet-wrap {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+    display: none; align-items: flex-end; justify-content: center; z-index: 60;
+  }
+  .sheet-wrap.show { display: flex; }
+  .sheet {
+    background: #fff; width: 100%; max-width: 480px; border-radius: 18px 18px 0 0;
+    padding: 20px 18px 28px;
+  }
+  .sheet .num { font-size: 13px; color: var(--sub); text-align: center; margin-bottom: 14px; }
+  .sheet .btn { font-size: 16px; padding: 14px; margin-top: 8px; }
+  .sheet .btn.cancel { color: var(--sub); }
+
+  .lightbox {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+    display: none; align-items: center; justify-content: center; z-index: 70; padding: 16px;
+    cursor: zoom-out;
+  }
+  .lightbox.show { display: flex; }
+  .lightbox img { max-width: 100%; max-height: 92vh; border-radius: 8px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="top">
+      <div class="shop-name">팡팡<span>주얼리</span></div>
+      <button class="call" id="callBtn">📞 010-4744-5615</button>
+    </div>
+    <input id="q" class="search" type="search" placeholder="상품명, 소재, 키워드로 검색">
+    <div class="cats" id="cats"></div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="intro">
+    <b>안녕하세요, 팡팡언니입니다 😊</b>
+    <p>라이브에서 고르기 어려우셨죠? 천천히 둘러보시고, 궁금한 점은 <b>문의하기</b>에 적어 주세요.</p>
+  </div>
+  <div class="notice">
+    💎 금 시세에 따라 가격이 매일 달라집니다. 가격은 문자로 안내드려요.
+  </div>
+  <div class="board" id="board"></div>
+</main>
+
+<footer>© 팡팡주얼리 · 문의 010-4744-5615</footer>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h3 id="mTitle"></h3>
+    <p class="p" id="mDesc"></p>
+    <input id="mInput" class="search" type="search" placeholder="궁금한 점을 적어 보세요 (예: 배송 얼마나 걸려요?)">
+    <div class="sec" id="mSecLabel">자주 묻는 질문</div>
+    <div id="mResults"></div>
+    <div class="btns">
+      <a class="btn primary" id="mSms" href="#">이 제품 문자로 가격 문의하기</a>
+      <button class="btn" id="mClose">닫기</button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet-wrap" id="sheetWrap">
+  <div class="sheet">
+    <div class="num">010-4744-5615</div>
+    <a class="btn primary" id="sheetCall" href="tel:01047445615">📞 전화하기</a>
+    <a class="btn" id="sheetSms" href="sms:01047445615">💬 문자 보내기</a>
+    <button class="btn cancel" id="sheetClose">닫기</button>
+  </div>
+</div>
+
+<div class="lightbox" id="lightbox">
+  <img id="lightboxImg" alt="">
+</div>
+
+<script src="qa.js"></script>
+<script>
+  // ===== 설정 =====
+  const SHOP_PHONE = "01047445615";
+  const CATEGORIES = ["전체", "목걸이", "반지", "팔찌", "귀걸이"];
+
+  // ===== 번호 배치 (위에서부터 001 → 150 순서) =====
+  const SLOT_PLAN = [
+    ["팔찌", 1, 1],
+    ["목걸이", 2, 50],
+    ["반지", 51, 90],
+    ["팔찌", 91, 120],
+    ["귀걸이", 121, 150]
+  ];
+
+  // ===== 예시 상품 (번호별로 채워 넣기) =====
+  //  - name 을 채우면 상품이 채워집니다. 비워두면 "준비중"으로 보여요.
+  //  - image    : 사진 주소 (GIF·JPG 등). 사진을 누르면 크게 봅니다.
+  //  - category : 칸의 기본 카테고리를 다르게 하고 싶을 때 지정
+  //  - soldOut  : true면 품절 처리
+  //  - 상품 전용 질문·답변은 qa.js 에서 productId 로 추가
+  const EXAMPLES = {
+    "001": {
+      name: "14k 15.99g 원석",
+      material: "14K 골드 · 원석",
+      desc: "무게 15.99g · 원석 팔찌",
+      tags: ["팔찌", "원석", "14k"],
+      image: "images/bracelet-004.gif"
+    },
+    "002": {
+      category: "팔찌",
+      name: "14k 9.37g 랩에멜/랩다이아 17.5cm",
+      material: "14K 골드 · 랩에멜 · 랩다이아",
+      desc: "무게 9.37g · 길이 17.5cm",
+      tags: ["팔찌", "랩에멜", "랩다이아", "14k"],
+      image: "images/002.gif"
+    },
+    "051": {
+      name: "실버 925 하트 반지",
+      material: "925 실버",
+      desc: "하트 포인트 · 사이즈 조절 가능",
+      tags: ["하트", "실버", "커플"]
+    },
+    "052": {
+      name: "다이아 큐빅 솔리테어 반지",
+      material: "925 실버 · 큐빅",
+      desc: "심플한 1구 디자인 · 여러 사이즈 보유",
+      tags: ["큐빅", "솔리테어", "웨딩"]
+    },
+    "121": {
+      name: "진주 드롭 귀걸이",
+      material: "담수진주 · 14K 포스트",
+      desc: "행사, 면접, 예식용 · 가볍고 편한 착용감",
+      tags: ["진주", "행사", "드롭"]
+    },
+    "003": {
+      category: "반지",
+      name: "상품 003",
+      material: "",
+      desc: "",
+      tags: [],
+      image: "images/003.gif"
+    },
+    "004": {
+      category: "반지",
+      name: "상품 004",
+      material: "",
+      desc: "",
+      tags: [],
+      image: "images/004.gif"
+    },
+    "005": {
+      category: "반지",
+      name: "상품 005",
+      material: "",
+      desc: "",
+      tags: [],
+      image: "images/005.gif"
+    },
+    "006": {
+      category: "반지",
+      name: "상품 006",
+      material: "",
+      desc: "",
+      tags: [],
+      image: "images/006.gif"
+    },
+    "007": {
+      category: "목걸이",
+      name: "상품 007",
+      material: "",
+      desc: "",
+      tags: [],
+      image: "images/007.gif"
+    },
+    "008": {
+      category: "반지",
+      name: "상품 008",
+      material: "",
+      desc: "",
+      tags: [],
+      image: "images/008.gif"
+    },
+    "009": {
+      category: "반지",
+      name: "상품 009",
+      material: "",
+      desc: "",
+      tags: [],
+      image: "images/009.gif"
+    },
+    "010": {
+      category: "반지",
+      name: "상품 010",
+      material: "",
+      desc: "",
+      tags: [],
+      image: "images/010.gif"
+    },
+    "011": {
+      category: "목걸이",
+      name: "상품 011",
+      material: "",
+      desc: "",
+      tags: [],
+      image: "images/011.gif"
+    },
+    "012": {
+      category: "목걸이",
+      name: "상품 012",
+      material: "",
+      desc: "",
+      tags: [],
+      image: "images/012.gif"
+    },
+    "013": {
+      category: "목걸이",
+      name: "상품 013",
+      material: "",
+      desc: "",
+      tags: [],
+      image: "images/013.gif"
+    },
+    "014": {
+      category: "목걸이",
+      name: "상품 014",
+      material: "",
+      desc: "",
+      tags: [],
+      image: "images/014.gif"
+    },
+    "015": {
+      category: "반지",
+      name: "상품 015",
+      material: "",
+      desc: "",
+      tags: [],
+      image: "images/015.gif"
+    },
+    "016": {
+      category: "반지",
+      name: "상품 016",
+      material: "",
+      desc: "",
+      tags: [],
+      image: "images/016.gif"
+    },
+    "017": {
+      category: "반지",
+      name: "상품 017",
+      material: "",
+      desc: "",
+      tags: [],
+      image: "images/017.gif"
+    },
+    "018": {
+      category: "반지",
+      name: "상품 018",
+      material: "",
+      desc: "",
+      tags: [],
+      image: "images/018.gif"
+    },
+    "019": {
+      category: "반지",
+      name: "상품 019",
+      material: "",
+      desc: "",
+      tags: [],
+      image: "images/019.gif"
+    },
+    "020": {
+      category: "팔찌",
+      name: "상품 020",
+      material: "",
+      desc: "",
+      tags: [],
+      image: "images/020.gif"
+    },
+    "021": {
+      category: "팔찌",
+      name: "상품 021",
+      material: "",
+      desc: "",
+      tags: [],
+      image: "images/021.gif"
+    },
+    "022": {
+      category: "반지",
+      name: "상품 022",
+      material: "",
+      desc: "",
+      tags: [],
+      image: "images/022.gif"
+    },
+    "023": {
+      category: "반지",
+      name: "상품 023",
+      material: "",
+      desc: "",
+      tags: [],
+      image: "images/023.gif"
+    }
+  };
+
+  // 150개 칸을 001~150 순서로 미리 만들어 둠
+  const PRODUCTS = [];
+  for (const [category, start, end] of SLOT_PLAN) {
+    for (let n = start; n <= end; n++) {
+      const id = String(n).padStart(3, "0");
+      PRODUCTS.push({
+        id,
+        category,
+        name: "",
+        material: "",
+        desc: "",
+        tags: [],
+        image: "",
+        soldOut: false,
+        ...(EXAMPLES[id] || {})
+      });
+    }
+  }
+  PRODUCTS.sort((a, b) => a.id.localeCompare(b.id));
+
+  // ===== 질문 매칭 (qa.js 의 QA 사용) =====
+  // 정규화: 공백·기호 제거, 소문자
+  function norm(s) {
+    return (s || "").toLowerCase().replace(/[\s.,!?~·\-_()\[\]"'“”]/g, "");
+  }
+  // 두 글자씩 잘라 비슷한 정도(0~1)를 계산
+  function bigrams(s) {
+    const t = norm(s);
+    const m = new Map();
+    for (let i = 0; i < t.length - 1; i++) {
+      const g = t.slice(i, i + 2);
+      m.set(g, (m.get(g) || 0) + 1);
+    }
+    return m;
+  }
+  function similarity(a, b) {
+    const A = bigrams(a), B = bigrams(b);
+    let totA = 0, totB = 0, inter = 0;
+    for (const v of A.values()) totA += v;
+    for (const v of B.values()) totB += v;
+    for (const [g, c] of A) if (B.has(g)) inter += Math.min(c, B.get(g));
+    return totA + totB ? (2 * inter) / (totA + totB) : 0;
+  }
+  // 질문 하나가 고객 질문과 얼마나 맞는지 점수
+  function scoreQA(query, item) {
+    const qn = norm(query);
+    let s = 0;
+    for (const k of item.keywords || []) {
+      if (k && qn.includes(norm(k))) s += 2;
+    }
+    let best = similarity(query, item.q);
+    for (const alt of item.alts || []) best = Math.max(best, similarity(query, alt));
+    s += best * 4;
+    return s;
+  }
+  // 상품에 맞는 질문만 골라서 점수 순으로 정렬
+  function findAnswers(query, productId) {
+    const pool = QA.filter(x => !x.productId || x.productId === productId);
+    return pool
+      .map(x => ({ x, s: scoreQA(query, x) }))
+      .filter(r => r.s >= 2)
+      .sort((a, b) => b.s - a.s)
+      .slice(0, 3)
+      .map(r => r.x);
+  }
+
+  // ===== 화면 로직 =====
+  let currentCat = "전체";
+  let currentQuery = "";
+  let currentProduct = null;
+
+  const $ = (id) => document.getElementById(id);
+
+  function renderCats() {
+    $("cats").innerHTML = CATEGORIES.map(c =>
+      `<button class="chip ${c === currentCat ? "on" : ""}" data-cat="${c}">${c}</button>`
+    ).join("");
+  }
+
+  function isFilled(p) {
+    return p.name && p.name.trim() !== "";
+  }
+
+  function matches(p) {
+    const catOk = currentCat === "전체" || p.category === currentCat;
+    const q = currentQuery.trim().toLowerCase();
+    if (!isFilled(p)) return catOk && !q;   // 준비중 칸은 검색어 없을 때만 보임
+    const text = [p.name, p.material, p.desc, p.category, ...(p.tags || [])].join(" ").toLowerCase();
+    const qOk = !q || text.includes(q);
+    return catOk && qOk;
+  }
+
+  function renderBoard() {
+    const list = PRODUCTS.filter(matches);
+    if (list.length === 0) {
+      $("board").innerHTML = `<div class="empty">찾으시는 상품이 없어요. 문의 주시면 찾아드릴게요.</div>`;
+      return;
+    }
+    $("board").innerHTML = list.map(p => {
+      if (!isFilled(p)) {
+        return `
+          <article class="post draft">
+            <div class="thumb">사진 준비중<span class="num-badge">${p.id}</span></div>
+            <div class="info">
+              <div class="title">준비중</div>
+              <div class="desc">${p.category}</div>
+              <div class="meta">
+                <span class="price">-</span>
+                <button class="ask" disabled>준비중</button>
+              </div>
+            </div>
+          </article>`;
+      }
+      return `
+      <article class="post ${p.soldOut ? "sold" : ""}">
+        <div class="thumb">
+          ${p.image ? `<img src="${p.image}" alt="${p.name}" data-full="${p.image}">` : "사진 준비중"}
+          <span class="num-badge">${p.id}</span>
+        </div>
+        <div class="info">
+          <div class="title">${p.name}</div>
+          <div class="desc">${p.desc}</div>
+          <div class="meta">
+            <span class="price">${p.soldOut ? "품절" : "가격: 문자 문의"}</span>
+            <button class="ask" data-id="${p.id}" ${p.soldOut ? "disabled" : ""}>
+              ${p.soldOut ? "품절" : "문의하기"}
+            </button>
+          </div>
+        </div>
+      </article>`;
+    }).join("");
+  }
+
+  // 자주 묻는 질문 (공통 질문 중 앞쪽 것)
+  function renderDefaultChips(p) {
+    const common = QA.filter(x => !x.productId).slice(0, 8);
+    const own = QA.filter(x => x.productId === p.id);
+    const items = [...own, ...common];
+    $("mResults").innerHTML = `<div class="chips">${items.map(x =>
+      `<button class="chip" data-qid="${x.id}">${x.q}</button>`
+    ).join("")}</div>`;
+  }
+
+  function showAnswers(query) {
+    if (!query.trim()) {
+      $("mSecLabel").textContent = "자주 묻는 질문";
+      renderDefaultChips(currentProduct);
+      return;
+    }
+    const found = findAnswers(query, currentProduct.id);
+    $("mSecLabel").textContent = found.length ? "이런 답변을 찾았어요" : "";
+    if (found.length === 0) {
+      $("mResults").innerHTML = `<div class="none">정확한 답변을 찾지 못했어요. 아래 문자 버튼으로 편하게 물어봐 주세요.</div>`;
+      return;
+    }
+    $("mResults").innerHTML = found.map(x => `
+      <div class="qa">
+        <div class="qq">${x.q}</div>
+        <div class="aa">${x.a}</div>
+      </div>`).join("");
+  }
+
+  function openAsk(id) {
+    const p = PRODUCTS.find(x => x.id === id);
+    if (!p || !isFilled(p)) return;
+    currentProduct = p;
+    $("mTitle").textContent = `[${p.id}] ${p.name}`;
+    $("mDesc").textContent = p.desc;
+    $("mInput").value = "";
+    showAnswers("");
+
+    const msg = `안녕하세요. 팡팡주얼리 상품 문의드립니다.\n[${p.id}] ${p.name}\n가격 안내 부탁드려요.`;
+    $("mSms").href = `sms:${SHOP_PHONE}?body=${encodeURIComponent(msg)}`;
+    $("overlay").classList.add("show");
+  }
+
+  function closeAsk() { $("overlay").classList.remove("show"); }
+
+  $("mInput").addEventListener("input", (e) => {
+    showAnswers(e.target.value);
+  });
+
+  $("mResults").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-qid]");
+    if (!b) return;
+    const item = QA.find(x => x.id === b.dataset.qid);
+    if (!item) return;
+    $("mInput").value = item.q;
+    $("mSecLabel").textContent = "이런 답변을 찾았어요";
+    $("mResults").innerHTML = `
+      <div class="qa">
+        <div class="qq">${item.q}</div>
+        <div class="aa">${item.a}</div>
+      </div>`;
+  });
+
+  $("cats").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-cat]");
+    if (!b) return;
+    currentCat = b.dataset.cat;
+    renderCats();
+    renderBoard();
+  });
+
+  $("q").addEventListener("input", (e) => {
+    currentQuery = e.target.value;
+    renderBoard();
+  });
+
+  $("board").addEventListener("click", (e) => {
+    const img = e.target.closest(".thumb img");
+    if (img) {
+      $("lightboxImg").src = img.dataset.full;
+      $("lightbox").classList.add("show");
+      return;
+    }
+    const b = e.target.closest(".ask");
+    if (!b || b.disabled) return;
+    openAsk(b.dataset.id);
+  });
+
+  $("lightbox").addEventListener("click", () => {
+    $("lightbox").classList.remove("show");
+    $("lightboxImg").src = "";
+  });
+
+  $("callBtn").addEventListener("click", () => {
+    $("sheetWrap").classList.add("show");
+  });
+  $("sheetClose").addEventListener("click", () => {
+    $("sheetWrap").classList.remove("show");
+  });
+  $("sheetWrap").addEventListener("click", (e) => {
+    if (e.target.id === "sheetWrap") $("sheetWrap").classList.remove("show");
+  });
+
+  $("mClose").addEventListener("click", closeAsk);
+  $("overlay").addEventListener("click", (e) => {
+    if (e.target.id === "overlay") closeAsk();
+  });
+
+  renderCats();
+  renderBoard();
+</script>
+</body>
+</html>
